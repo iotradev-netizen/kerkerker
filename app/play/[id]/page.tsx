@@ -282,6 +282,31 @@ export default function PlayPage() {
     }
   }, [dramaDetail, currentEpisode, selectEpisode]);
 
+  // 快进5秒
+  const forward5Seconds = useCallback(() => {
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      videoElement.currentTime = Math.min(videoElement.currentTime + 5, videoElement.duration);
+    }
+  }, []);
+
+  // 快退5秒
+  const rewind5Seconds = useCallback(() => {
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      videoElement.currentTime = Math.max(videoElement.currentTime - 5, 0);
+    }
+  }, []);
+
+  // 切换全屏
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+
   // 返回列表
   const goBack = useCallback(() => {
     router.push("/");
@@ -307,11 +332,16 @@ export default function PlayPage() {
           break;
         case "ArrowLeft":
           e.preventDefault();
-          previousEpisode();
+          rewind5Seconds();
           break;
         case "ArrowRight":
           e.preventDefault();
-          nextEpisode();
+          forward5Seconds();
+          break;
+        case "f":
+        case "F":
+          e.preventDefault();
+          toggleFullscreen();
           break;
         case "Escape":
           goBack();
@@ -321,7 +351,7 @@ export default function PlayPage() {
 
     window.addEventListener("keydown", handleKeydown);
     return () => window.removeEventListener("keydown", handleKeydown);
-  }, [previousEpisode, nextEpisode, goBack]);
+  }, [previousEpisode, nextEpisode, forward5Seconds, rewind5Seconds, toggleFullscreen, goBack]);
 
   // 保存播放历史 - 统一使用视频源封面
   useEffect(() => {
