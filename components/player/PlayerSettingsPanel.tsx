@@ -11,6 +11,8 @@ interface PlayerSettingsPanelProps {
   vodSource?: VodSource | null; // 当前视频源
   onModeChange: (mode: "iframe" | "local") => void;
   onIframePlayerChange: (index: number) => void;
+  isOpen?: boolean; // 外部控制面板打开状态
+  onToggle?: () => void; // 外部控制面板切换
 }
 
 export function PlayerSettingsPanel({
@@ -20,9 +22,15 @@ export function PlayerSettingsPanel({
   vodSource,
   onModeChange,
   onIframePlayerChange,
+  isOpen: externalIsOpen,
+  onToggle,
 }: PlayerSettingsPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  
+  // 使用外部控制的 isOpen 或内部状态
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = onToggle || setInternalIsOpen;
 
   // 切换到iframe模式时，自动选择视频源的专属播放器
   const handleModeChange = (mode: "iframe" | "local") => {
@@ -494,7 +502,10 @@ export function PlayerSettingsPanel({
               </h4>
               <div className="space-y-2">
                 {[
-                  { key: "← / →", desc: "上一集 / 下一集" },
+                  { key: "← / →", desc: "快退 / 快进 5秒" },
+                  { key: "↑ / ↓", desc: "增加 / 减少音量" },
+                  { key: "PgUp / PgDn", desc: "上一集 / 下一集" },
+                  { key: "F", desc: "切换播放器全屏" },
                   { key: "S", desc: "打开/关闭设置" },
                   { key: "ESC", desc: "返回首页" },
                 ].map((shortcut, index) => (
