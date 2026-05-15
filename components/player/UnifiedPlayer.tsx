@@ -44,6 +44,7 @@ interface UnifiedPlayerProps {
   onProgress?: (time: number) => void;
   onEnded?: () => void;
   onIframePlayerSwitch?: (playerIndex: number) => void;
+  seekFnRef?: React.MutableRefObject<(delta: number) => void>;
 }
 
 export function UnifiedPlayer({
@@ -57,6 +58,7 @@ export function UnifiedPlayer({
   onProgress,
   onEnded,
   onIframePlayerSwitch,
+  seekFnRef,
 }: UnifiedPlayerProps) {
   const [playerConfig, setPlayerConfig] = useState<PlayerConfig | null>(null);
   const [currentMode, setCurrentMode] = useState<"iframe" | "local" | null>(
@@ -366,6 +368,7 @@ export function UnifiedPlayer({
           onProgress={onProgress}
           onEnded={onEnded}
           onError={handlePlayerError}
+          seekFnRef={seekFnRef}
         />
       )}
     </div>

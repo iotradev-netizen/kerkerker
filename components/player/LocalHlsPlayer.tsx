@@ -26,6 +26,7 @@ interface LocalHlsPlayerProps {
   onProgress?: (time: number) => void;
   onEnded?: () => void;
   onError?: () => void;
+  seekFnRef?: React.MutableRefObject<(delta: number) => void>;
 }
 
 // 常量
@@ -42,6 +43,7 @@ export function LocalHlsPlayer({
   onProgress,
   onEnded,
   onError,
+  seekFnRef,
 }: LocalHlsPlayerProps) {
   // 状态
   const [isLoading, setIsLoading] = useState(true);
@@ -361,6 +363,19 @@ export function LocalHlsPlayer({
 
         artRef.current = art;
 
+        // 暴露 seek 接口给父组件，避免直接操作 video DOM 导致闪烁
+        if (seekFnRef) {
+          seekFnRef.current = (delta: number) => {
+            if (artRef.current) {
+              if (delta > 0) {
+                artRef.current.forward = delta;
+              } else {
+                artRef.current.backward = Math.abs(delta);
+              }
+            }
+          };
+        }
+
         // 事件监听
         art.on("ready", () => {
           setIsLoading(false);
@@ -462,6 +477,9 @@ export function LocalHlsPlayer({
 
     return () => {
       isMountedRef.current = false;
+      if (seekFnRef) {
+        seekFnRef.current = () => {};
+      }
       cleanupPlayer();
     };
   }, [

@@ -59,6 +59,7 @@ export default function PlayPage() {
   
   // 播放器容器引用
   const playerContainerRef = useRef<HTMLDivElement>(null);
+  const seekFnRef = useRef<(delta: number) => void>(() => {});
   
   // 设置面板状态
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -290,18 +291,12 @@ export default function PlayPage() {
 
   // 快进5秒
   const forward5Seconds = useCallback(() => {
-    const videoElement = document.querySelector('video');
-    if (videoElement) {
-      videoElement.currentTime = Math.min(videoElement.currentTime + 5, videoElement.duration);
-    }
+    seekFnRef.current(5);
   }, []);
 
   // 快退5秒
   const rewind5Seconds = useCallback(() => {
-    const videoElement = document.querySelector('video');
-    if (videoElement) {
-      videoElement.currentTime = Math.max(videoElement.currentTime - 5, 0);
-    }
+    seekFnRef.current(-5);
   }, []);
 
   // 增加音量
@@ -550,6 +545,7 @@ export default function PlayPage() {
             {dramaDetail && dramaDetail.episodes.length > 0 && (
               <UnifiedPlayer
                 videoUrl={dramaDetail.episodes[currentEpisode].url}
+                seekFnRef={seekFnRef}
                 title={`${dramaDetail.name} - 第${currentEpisode + 1}集`}
                 mode={playerMode}
                 currentIframePlayerIndex={currentIframePlayerIndex}
