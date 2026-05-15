@@ -104,7 +104,11 @@ export interface MatchResponse {
 
 // 获取 API 基础 URL
 function getApiBaseUrl(): string {
-  return `${DANMU_API_URL}/${DANMU_API_TOKEN}`;
+  return DANMU_API_URL;
+}
+
+function getApiTokenParam(): string {
+  return `token=${encodeURIComponent(DANMU_API_TOKEN)}`;
 }
 
 /**
@@ -118,7 +122,7 @@ export async function searchAnime(keyword: string): Promise<Anime[]> {
   try {
     const url = `${getApiBaseUrl()}/api/v2/search/anime?keyword=${encodeURIComponent(
       keyword
-    )}`;
+    )}&${getApiTokenParam()}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -144,7 +148,7 @@ export async function searchAnime(keyword: string): Promise<Anime[]> {
  */
 export async function getBangumi(animeId: number): Promise<Bangumi | null> {
   try {
-    const url = `${getApiBaseUrl()}/api/v2/bangumi/${animeId}`;
+    const url = `${getApiBaseUrl()}/api/v2/bangumi/${animeId}?${getApiTokenParam()}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -170,7 +174,7 @@ export async function getBangumi(animeId: number): Promise<Bangumi | null> {
  */
 export async function getComments(episodeId: number): Promise<DanmakuItem[]> {
   try {
-    const url = `${getApiBaseUrl()}/api/v2/comment/${episodeId}?format=json`;
+    const url = `${getApiBaseUrl()}/api/v2/comment/${episodeId}?format=json&${getApiTokenParam()}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -198,7 +202,7 @@ export async function matchAnime(
   fileName: string
 ): Promise<MatchResponse | null> {
   try {
-    const url = `${getApiBaseUrl()}/api/v2/match`;
+    const url = `${getApiBaseUrl()}/api/v2/match?${getApiTokenParam()}`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
