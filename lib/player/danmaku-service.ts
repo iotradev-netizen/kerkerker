@@ -114,6 +114,8 @@ function getApiTokenParam(): string {
 /**
  * 搜索动漫
  */
+const FETCH_TIMEOUT = 8000;
+
 export async function searchAnime(keyword: string): Promise<Anime[]> {
   if (!keyword || keyword.trim() === "") {
     return [];
@@ -123,7 +125,7 @@ export async function searchAnime(keyword: string): Promise<Anime[]> {
     const url = `${getApiBaseUrl()}/api/v2/search/anime?keyword=${encodeURIComponent(
       keyword
     )}&${getApiTokenParam()}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
 
     if (!response.ok) {
       console.error(`搜索动漫失败: HTTP ${response.status}`);
@@ -149,7 +151,7 @@ export async function searchAnime(keyword: string): Promise<Anime[]> {
 export async function getBangumi(animeId: number): Promise<Bangumi | null> {
   try {
     const url = `${getApiBaseUrl()}/api/v2/bangumi/${animeId}?${getApiTokenParam()}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
 
     if (!response.ok) {
       console.error(`获取动漫详情失败: HTTP ${response.status}`);
@@ -175,7 +177,7 @@ export async function getBangumi(animeId: number): Promise<Bangumi | null> {
 export async function getComments(episodeId: number): Promise<DanmakuItem[]> {
   try {
     const url = `${getApiBaseUrl()}/api/v2/comment/${episodeId}?format=json&${getApiTokenParam()}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
 
     if (!response.ok) {
       console.error(`获取弹幕失败: HTTP ${response.status}`);
@@ -208,6 +210,7 @@ export async function matchAnime(
       headers: {
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT),
       body: JSON.stringify({
         fileName,
         matchMode: "hashAndFileName",
@@ -322,35 +325,7 @@ export async function autoLoadDanmaku(videoTitle: string): Promise<AutoLoadResul
   console.log(`🔍 自动匹配弹幕: ${videoTitle}`);
 
   try {
-    // 尝试自动匹配
-    const matchResult = await matchAnime(videoTitle);
-
-    if (matchResult && matchResult.success && matchResult.isMatched && matchResult.episodeId) {
-      console.log(`✅ 匹配成功: ${matchResult.animeTitle} - ${matchResult.episodeTitle}`);
-
-      // 获取弹幕
-      const danmaku = await getComments(matchResult.episodeId);
-
-      if (danmaku.length > 0) {
-        return {
-          success: true,
-          danmaku,
-          matchedTitle: matchResult.animeTitle,
-          episodeTitle: matchResult.episodeTitle,
-          message: `已加载 ${danmaku.length} 条弹幕`,
-        };
-      } else {
-        return {
-          success: false,
-          danmaku: [],
-          matchedTitle: matchResult.animeTitle,
-          episodeTitle: matchResult.episodeTitle,
-          message: "匹配成功但该剧集暂无弹幕",
-        };
-      }
-    }
-
-    // 匹配失败，尝试通过搜索找到第一个结果
+    // 直接通过搜索匹配（matchAnime 需要 fileHash 才能准确匹配，跳过以节省一次请求）
     const keyword = extractSearchKeyword(videoTitle);
     if (keyword) {
       const animes = await searchAnime(keyword);
