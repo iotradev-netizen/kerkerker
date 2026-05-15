@@ -147,18 +147,14 @@ export async function GET(request: NextRequest) {
  */
 function rewriteM3U8(content: string, baseUrl: string, proxyOrigin: string): string {
   const lines = content.split('\n');
-  const baseUrlObj = new URL(baseUrl);
-  const baseDir = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
   
   // 辅助函数：将相对URL转换为绝对URL
   const resolveUrl = (url: string): string => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    if (url.startsWith('/')) {
-      return `${baseUrlObj.protocol}//${baseUrlObj.host}${url}`;
-    }
-    return baseDir + url;
+    // 使用 URL 构造函数处理相对路径，兼容无路径的 baseUrl
+    return new URL(url, baseUrl).href;
   };
   
   const rewrittenLines = lines.map(line => {

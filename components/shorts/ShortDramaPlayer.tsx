@@ -20,9 +20,16 @@ export function ShortDramaPlayer({
   const artRef = useRef<Artplayer | null>(null);
   const hlsRef = useRef<any>(null);
   const isMountedRef = useRef(true);
+  const onProgressRef = useRef(onProgress);
+  const onEndedRef = useRef(onEnded);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // 保持 ref 最新
+  onProgressRef.current = onProgress;
+  onEndedRef.current = onEnded;
 
   // 初始化播放器
   useEffect(() => {
@@ -147,13 +154,14 @@ export function ShortDramaPlayer({
         });
 
         art.on("video:timeupdate", () => {
-          if (onProgress && art.duration > 0) {
-            onProgress(art.currentTime, art.duration);
+          const cb = onProgressRef.current;
+          if (cb && art.duration > 0) {
+            cb(art.currentTime, art.duration);
           }
         });
 
         art.on("video:ended", () => {
-          onEnded();
+          onEndedRef.current();
         });
 
         art.on("video:error", () => {
@@ -179,7 +187,7 @@ export function ShortDramaPlayer({
         hlsRef.current = null;
       }
     };
-  }, [videoUrl]);
+  }, [videoUrl, retryCount]);
 
   // 控制播放/暂停
   useEffect(() => {
@@ -209,11 +217,12 @@ export function ShortDramaPlayer({
       artRef.current.destroy();
       artRef.current = null;
     }
-    // 触发重新初始化
-    const container = containerRef.current;
-    if (container) {
-      container.innerHTML = "";
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
     }
+    // 增加重试计数，触发 effect 重新初始化
+    setRetryCount((c) => c + 1);
   }, []);
 
   return (

@@ -1,7 +1,6 @@
 import { getDatabase } from "./db";
 import { ShortDramaSource } from "@/types/shorts-source";
 import { COLLECTIONS } from "./constants/db";
-import type { AnyBulkWriteOperation } from "mongodb";
 
 export interface ShortDramaSourceDoc {
   _id?: string;
@@ -67,7 +66,7 @@ export async function getAllShortsSourcesFromDB(): Promise<
   return docs;
 }
 
-// 批量保存短剧源
+// 批量保存短剧源（先 upsert 再清理多余记录，防止中间失败导致数据丢失）
 export async function saveShortsSourcesToDB(sources: ShortDramaSource[]) {
   const db = await getDatabase();
   const collection = db.collection<ShortDramaSourceDoc>(
@@ -75,25 +74,32 @@ export async function saveShortsSourcesToDB(sources: ShortDramaSource[]) {
   );
   const now = new Date().toISOString();
 
-  const docs: ShortDramaSourceDoc[] = sources.map((source, index) => ({
-    key: source.key,
-    name: source.name,
-    api: source.api,
-    type_id: source.typeId,
-    priority: source.priority ?? index,
-    enabled: true,
-    sort_order: index,
-    created_at: now,
-    updated_at: now,
-  }));
+  // 先 upsert 所有新数据
+  for (const source of sources) {
+    const doc = {
+      key: source.key,
+      name: source.name,
+      api: source.api,
+      type_id: source.typeId,
+      priority: source.priority ?? 0,
+      enabled: true,
+      updated_at: now,
+    };
 
-  const operations: AnyBulkWriteOperation<ShortDramaSourceDoc>[] = [
-    { deleteMany: { filter: {} } },
-    ...docs.map((doc) => ({ insertOne: { document: doc } })),
-  ];
+    await collection.updateOne(
+      { key: source.key },
+      {
+        $set: doc,
+        $setOnInsert: { created_at: now, sort_order: 0 },
+      },
+      { upsert: true }
+    );
+  }
 
-  if (operations.length >= 1) {
-    await collection.bulkWrite(operations, { ordered: true });
+  // 然后删除不在新列表中的旧记录
+  const incomingKeys = sources.map((s) => s.key);
+  if (sources.length > 0) {
+    await collection.deleteMany({ key: { $nin: incomingKeys } });
   }
 }
 

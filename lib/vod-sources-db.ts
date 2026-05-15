@@ -1,7 +1,6 @@
 import { getDatabase } from "./db";
 import { VodSource } from "@/types/drama";
 import { COLLECTIONS } from "./constants/db";
-import type { AnyBulkWriteOperation } from "mongodb";
 
 export interface VodSourceDoc {
   _id?: string;
@@ -110,40 +109,46 @@ export async function saveVodSourceToDB(
   );
 }
 
-// 批量保存视频源（原子操作）
+// 批量保存视频源（先 upsert 再清理多余记录，防止中间失败导致数据丢失）
 export async function saveVodSourcesToDB(sources: VodSource[]) {
   const db = await getDatabase();
   const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
   const now = new Date().toISOString();
 
-  // 构建文档列表
-  const docs: VodSourceDoc[] = sources.map((source, index) => ({
-    key: source.key,
-    name: source.name,
-    api: source.api,
-    play_url: source.playUrl,
-    use_play_url: source.usePlayUrl ?? true,
-    priority: source.priority ?? index,
-    search_proxy: source.searchProxy,
-    parse_proxy: source.parseProxy,
-    parse_token: source.parseToken,
-    parse_id: source.parseId,
-    type: source.type,
-    enabled: true,
-    sort_order: index,
-    created_at: now,
-    updated_at: now,
-  }));
+  // 先 upsert 所有新数据（即使后续删除失败，数据也不会丢失）
+  for (const source of sources) {
+    const key = source.key;
+    const doc = {
+      key: source.key,
+      name: source.name,
+      api: source.api,
+      play_url: source.playUrl,
+      use_play_url: source.usePlayUrl ?? true,
+      priority: source.priority ?? 0,
+      search_proxy: source.searchProxy,
+      parse_proxy: source.parseProxy,
+      parse_token: source.parseToken,
+      parse_id: source.parseId,
+      type: source.type,
+      enabled: true,
+      sort_order: 0,
+      updated_at: now,
+    };
 
-  // 使用 bulkWrite 顺序执行（ordered: true）
-  // 注意：失败时停止后续操作，但已执行操作不会回滚
-  const operations: AnyBulkWriteOperation<VodSourceDoc>[] = [
-    { deleteMany: { filter: {} } },
-    ...docs.map((doc) => ({ insertOne: { document: doc } })),
-  ];
+    await collection.updateOne(
+      { key },
+      {
+        $set: doc,
+        $setOnInsert: { created_at: now, sort_order: 0 },
+      },
+      { upsert: true }
+    );
+  }
 
-  if (operations.length >= 1) {
-    await collection.bulkWrite(operations, { ordered: true });
+  // 然后删除不在新列表中的旧记录
+  const incomingKeys = sources.map((s) => s.key);
+  if (sources.length > 0) {
+    await collection.deleteMany({ key: { $nin: incomingKeys } });
   }
 }
 
