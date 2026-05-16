@@ -10,6 +10,7 @@ export interface VodSourceDoc {
   play_url?: string; // 播放地址前缀
   use_play_url?: boolean; // 是否使用播放地址
   priority?: number; // 优先级，数值越小优先级越高
+  search_ac?: string; // 搜索时使用的 ac 参数值
   search_proxy?: string; // 搜索代理 URL
   parse_proxy?: string; // 视频解析代理 URL
   parse_token?: string; // 视频解析 token
@@ -39,6 +40,7 @@ function docToVodSource(doc: VodSourceDoc): VodSource {
     usePlayUrl: doc.use_play_url ?? true,
     priority: doc.priority ?? 0,
     type: "json",
+    searchAc: doc.search_ac,
     searchProxy: doc.search_proxy,
     parseProxy: doc.parse_proxy,
     parseToken: doc.parse_token,
@@ -89,6 +91,7 @@ export async function saveVodSourceToDB(
     play_url: source.playUrl,
     use_play_url: source.usePlayUrl ?? true,
     priority: source.priority ?? 0,
+    search_ac: source.searchAc,
     search_proxy: source.searchProxy,
     parse_proxy: source.parseProxy,
     parse_token: source.parseToken,
@@ -125,6 +128,7 @@ export async function saveVodSourcesToDB(sources: VodSource[]) {
       play_url: source.playUrl,
       use_play_url: source.usePlayUrl ?? true,
       priority: source.priority ?? 0,
+      search_ac: source.searchAc,
       search_proxy: source.searchProxy,
       parse_proxy: source.parseProxy,
       parse_token: source.parseToken,

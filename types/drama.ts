@@ -44,6 +44,7 @@ export interface VodSource {
   usePlayUrl?: boolean;  // 是否使用播放地址（默认 true，如果有 playUrl）
   priority?: number;     // 优先级，数值越小优先级越高（默认 0）
   type: 'json';          // 仅支持 JSON 格式
+  searchAc?: string;     // 搜索时使用的 ac 参数值，默认 "detail"
   searchProxy?: string;  // 搜索代理 URL，使用 POST 请求
   parseProxy?: string;   // 视频解析代理 URL
   parseToken?: string;   // 视频解析 token

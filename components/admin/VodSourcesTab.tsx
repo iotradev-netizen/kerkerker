@@ -34,6 +34,7 @@ export function VodSourcesTab({
     usePlayUrl: true,
     priority: 0,
     type: "json",
+    searchAc: "",
   });
 
   // 加密导入相关状态
@@ -536,21 +537,36 @@ export function VodSourcesTab({
               placeholder="https://..."
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              播放地址{" "}
-              <span className="text-slate-500 font-normal">(可选)</span>
-            </label>
-            <input
-              type="text"
-              value={formData.playUrl || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, playUrl: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="留空则直接使用原始播放链接"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+               搜索 ac 参数{" "}
+               <span className="text-slate-500 font-normal">(可选，默认 detail)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.searchAc || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, searchAc: e.target.value })
+                }
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="detail (标准) / search (全量后过滤)"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+               播放地址{" "}
+               <span className="text-slate-500 font-normal">(可选)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.playUrl || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, playUrl: e.target.value })
+                }
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="留空则直接使用原始播放链接"
+              />
+            </div>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               优先级{" "}

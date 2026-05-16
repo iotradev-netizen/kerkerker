@@ -89,9 +89,11 @@ export async function POST(request: NextRequest) {
         signal: AbortSignal.timeout(15000),
       });
     } else {
+      const searchAc = source.searchAc || 'detail';
+
       // 标准 GET 请求
       const apiParams: Record<string, string> = {
-        ac: 'detail',
+        ac: searchAc,
         pg: body.page || '1',
       };
 
@@ -99,7 +101,7 @@ export async function POST(request: NextRequest) {
         apiParams.t = body.type_id;
       }
 
-      if (body.keyword) {
+      if (body.keyword && searchAc === 'detail') {
         apiParams.wd = body.keyword;
       }
 
@@ -168,6 +170,18 @@ export async function POST(request: NextRequest) {
       formattedList = formatDramaList(parsedData.list || []);
       pagecount = parsedData.pagecount || 1;
       total = parsedData.total || 0;
+
+      // 当 API 不支持关键词搜索时（searchAc !== 'detail'），客户端侧按关键词过滤
+      if (body.keyword && source.searchAc && source.searchAc !== 'detail') {
+        const kw = body.keyword.toLowerCase();
+        formattedList = formattedList.filter(
+          (item) =>
+            item.name.toLowerCase().includes(kw) ||
+            (item.subName && item.subName.toLowerCase().includes(kw))
+        );
+        total = formattedList.length;
+        pagecount = 1;
+      }
     } else {
       return NextResponse.json({
         code: 200,
