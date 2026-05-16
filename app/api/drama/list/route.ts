@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       pagecount = parsedData.pagecount || 1;
       total = parsedData.total || 0;
 
-      // 当 API 不支持关键词搜索时（searchAc !== 'detail'），客户端侧按关键词过滤
+      // 当 API 不支持关键词搜索时（searchAc !== 'detail'），遍历多页并过滤
       if (body.keyword && source.searchAc && source.searchAc !== 'detail') {
         const kw = body.keyword.toLowerCase();
         formattedList = formattedList.filter(
@@ -179,6 +179,34 @@ export async function POST(request: NextRequest) {
             item.name.toLowerCase().includes(kw) ||
             (item.subName && item.subName.toLowerCase().includes(kw))
         );
+
+        // 遍历后续页面（最多 20 页 = 400 条）
+        const maxPages = Math.min(pagecount || 1, 20);
+        for (let pg = 2; pg <= maxPages; pg++) {
+          const pgParams = new URLSearchParams({ ac: source.searchAc, pg: String(pg) });
+          if (body.type_id) pgParams.set('t', body.type_id);
+          try {
+            const pgRes = await fetch(`${source.api}?${pgParams}`, {
+              signal: AbortSignal.timeout(3000),
+            });
+            if (!pgRes.ok) break;
+            const pgText = await pgRes.text();
+            const pgData = JSON.parse(pgText);
+            if (pgData.code === 1 && pgData.list) {
+              const pgItems = formatDramaList(pgData.list);
+              const matched = pgItems.filter(
+                (item) =>
+                  item.name.toLowerCase().includes(kw) ||
+                  (item.subName && item.subName.toLowerCase().includes(kw))
+              );
+              formattedList.push(...matched);
+            }
+          } catch {
+            break;
+          }
+          if (formattedList.length > 0) break;
+        }
+
         total = formattedList.length;
         pagecount = 1;
       }
