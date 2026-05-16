@@ -143,7 +143,7 @@ export async function saveVodSourcesToDB(sources: VodSource[]) {
       { key },
       {
         $set: doc,
-        $setOnInsert: { created_at: now, sort_order: 0 },
+        $setOnInsert: { created_at: now },
       },
       { upsert: true }
     );
