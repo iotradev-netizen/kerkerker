@@ -156,7 +156,7 @@ export function PlayerSettingsPanel({
 
       {/* 设置面板 */}
       {isOpen && (
-        <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto top-[60px] sm:top-auto sm:right-0 sm:mt-3 w-full sm:w-80 md:w-96 max-h-[calc(100dvh-80px)] sm:max-h-[70vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-y-auto animate-fade-in z-[500]">
+        <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto top-[60px] sm:top-auto sm:right-0 sm:mt-3 sm:w-80 md:w-96 max-h-[calc(100dvh-80px)] sm:max-h-[70vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-y-auto animate-fade-in z-[500]">
           {/* 标题栏 */}
           <div className="p-3 border-b border-gray-800 bg-gradient-to-r from-gray-800/50 to-transparent">
             <div className="flex items-center justify-between">

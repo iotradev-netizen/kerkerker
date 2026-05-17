@@ -89,6 +89,8 @@ export function LocalHlsPlayer({
   const onNextEpisodeRef = useRef(onNextEpisode);
   const settingsRef = useRef(settings);
   const videoUrlRef = useRef(videoUrl);
+  const showPrevBtn = !!onPrevEpisode;
+  const showNextBtn = !!onNextEpisode;
 
   // 更新回调 ref（每次渲染同步最新值）
   useEffect(() => {
@@ -729,6 +731,34 @@ export function LocalHlsPlayer({
   return (
     <div className="relative w-full h-full bg-black">
       <div ref={containerRef} className="w-full h-full" />
+
+      {/* 上一集/下一集覆盖按钮（独立于 Artplayer 控制栏，始终可见） */}
+      {showPrevBtn && !isLoading && !error && (
+        <button
+          onClick={() => onPrevEpisode?.()}
+          className="absolute left-0 top-0 bottom-0 w-16 md:w-20 z-40 flex items-center justify-start pl-2 group cursor-pointer"
+          aria-label="上一集"
+        >
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:bg-black/60 transition-all duration-200 hover:scale-110">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </div>
+        </button>
+      )}
+      {showNextBtn && !isLoading && !error && (
+        <button
+          onClick={() => onNextEpisode?.()}
+          className="absolute right-0 top-0 bottom-0 w-16 md:w-20 z-40 flex items-center justify-end pr-2 group cursor-pointer"
+          aria-label="下一集"
+        >
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:bg-black/60 transition-all duration-200 hover:scale-110">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        </button>
+      )}
 
       {/* 自动加载弹幕状态提示 */}
       {autoLoadStatus.loading && autoLoadStatus.message && (
