@@ -340,6 +340,22 @@ export default function PlayPage() {
     }
   }, [router]);
 
+  // 全屏状态变化时切换 body class（移动端隐藏导航/侧边栏）
+  useEffect(() => {
+    const handleFSChange = () => {
+      document.body.classList.toggle(
+        "is-fullscreen",
+        !!document.fullscreenElement
+      );
+    };
+    document.addEventListener("fullscreenchange", handleFSChange);
+    document.addEventListener("webkitfullscreenchange", handleFSChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFSChange);
+      document.removeEventListener("webkitfullscreenchange", handleFSChange);
+    };
+  }, []);
+
   // 键盘快捷键
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -544,7 +560,7 @@ export default function PlayPage() {
             ref={playerContainerRef}
             className={`relative w-full bg-black overflow-hidden ${
               isRightPanelOpen ? "aspect-video h-full" : "h-full"
-            }`}
+            } max-lg:max-h-[50vh] max-lg:min-h-[240px]`}
           >
             {dramaDetail && dramaDetail.episodes.length > 0 && (
               <UnifiedPlayer
@@ -603,7 +619,7 @@ export default function PlayPage() {
 
         {/* 右侧：剧集信息和选择器 - Netflix风格 */}
         {isRightPanelOpen ? (
-          <div className="w-full lg:w-[380px] xl:w-[420px] bg-zinc-900 overflow-y-auto lg:max-h-[calc(100vh-65px)] relative">
+          <div className="w-full lg:w-[380px] xl:w-[420px] bg-zinc-900 overflow-y-auto lg:max-h-[calc(100vh-65px)] relative play-right-panel">
             {/* 关闭按钮 */}
             <button
               onClick={() => setIsRightPanelOpen(false)}

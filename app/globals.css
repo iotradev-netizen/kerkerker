@@ -242,10 +242,10 @@ label[for] {
 
 /* ========== 移动端全屏优化 ========== */
 
-/* 全屏状态下隐藏页面导航和侧边栏 */
-html:has(video:-webkit-full-screen) body > *:not([class*="player-container"]),
-html:has(video:fullscreen) body > *:not([class*="player-container"]) {
-  display: none;
+/* 全屏状态下隐藏页面导航和侧边栏（由 JS 控制 body.is-fullscreen） */
+body.is-fullscreen nav:not([class*="artplayer"]),
+body.is-fullscreen .play-right-panel {
+  display: none !important;
 }
 
 /* 修复安卓浏览器全屏后顶部导航栏遮挡 */

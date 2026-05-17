@@ -270,11 +270,15 @@ export function LocalHlsPlayer({
         } as Parameters<typeof artplayerPluginDanmuku>[0]);
         danmakuPluginRef.current = danmakuPlugin;
 
+        // 检测 HLS.js 是否支持（iOS Safari 不支持 MSE，使用原生 HLS 播放）
+        const hlsSupported = Hls.isSupported();
+        const playerUrl = getProxiedUrl(videoUrl);
+
         // 创建 ArtPlayer 实例
         const art = new Artplayer({
           container: containerRef.current,
-          url: getProxiedUrl(videoUrl),
-          type: "m3u8",
+          url: playerUrl,
+          type: hlsSupported ? "m3u8" : undefined,
           volume: 0.8,
           isLive: false,
           muted: false,
@@ -467,8 +471,12 @@ export function LocalHlsPlayer({
         });
 
         art.on("video:loadedmetadata", () => {
+          setIsLoading(false);
+
           if (settingsRef.current.autoSaveProgress) {
-            const saved = localStorage.getItem(`video_progress_${videoUrl}`);
+            const saved = localStorage.getItem(
+              `video_progress_${videoUrlRef.current}`
+            );
             if (saved) {
               try {
                 const progress = JSON.parse(saved);
@@ -533,12 +541,12 @@ export function LocalHlsPlayer({
 
   // 切换视频源（不销毁播放器，保持全屏状态）
   useEffect(() => {
-    if (!artRef.current || !hlsRef.current || !videoUrl) return;
+    if (!artRef.current || !videoUrl) return;
     const newUrl = getProxiedUrl(videoUrl);
-    if (hlsRef.current.url !== newUrl) {
+    if (artRef.current.url !== newUrl) {
       setIsLoading(true);
       setError(null);
-      hlsRef.current.loadSource(newUrl);
+      artRef.current.switchUrl(newUrl);
     }
   }, [videoUrl, getProxiedUrl]);
 
