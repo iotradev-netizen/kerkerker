@@ -295,7 +295,7 @@ export function LocalHlsPlayer({
           playbackRate: true,
           aspectRatio: true,
           fullscreen: true,
-          fullscreenWeb: true,
+          fullscreenWeb: false,
           subtitleOffset: true,
           miniProgressBar: true,
           mutex: true,
