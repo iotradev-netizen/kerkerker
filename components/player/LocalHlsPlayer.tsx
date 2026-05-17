@@ -88,8 +88,9 @@ export function LocalHlsPlayer({
   const onPrevEpisodeRef = useRef(onPrevEpisode);
   const onNextEpisodeRef = useRef(onNextEpisode);
   const settingsRef = useRef(settings);
+  const videoUrlRef = useRef(videoUrl);
 
-  // 更新回调 ref
+  // 更新回调 ref（每次渲染同步最新值）
   useEffect(() => {
     onProgressRef.current = onProgress;
     onEndedRef.current = onEnded;
@@ -97,6 +98,7 @@ export function LocalHlsPlayer({
     onPrevEpisodeRef.current = onPrevEpisode;
     onNextEpisodeRef.current = onNextEpisode;
     settingsRef.current = settings;
+    videoUrlRef.current = videoUrl;
   });
 
   // 确保在客户端执行
@@ -490,7 +492,7 @@ export function LocalHlsPlayer({
             Math.floor(currentTime) % currentSettings.progressSaveInterval === 0
           ) {
             localStorage.setItem(
-              `video_progress_${videoUrl}`,
+              `video_progress_${videoUrlRef.current}`,
               JSON.stringify({ time: currentTime, timestamp: Date.now() })
             );
           }
@@ -498,7 +500,7 @@ export function LocalHlsPlayer({
 
         art.on("video:ended", () => {
           if (settingsRef.current.autoSaveProgress) {
-            localStorage.removeItem(`video_progress_${videoUrl}`);
+            localStorage.removeItem(`video_progress_${videoUrlRef.current}`);
           }
           onEndedRef.current?.();
         });
@@ -524,13 +526,21 @@ export function LocalHlsPlayer({
     };
   }, [
     isClient,
-    videoUrl,
     retryCount,
-    useDirectPlay,
-    getProxiedUrl,
     setPlayerError,
     cleanupPlayer,
   ]);
+
+  // 切换视频源（不销毁播放器，保持全屏状态）
+  useEffect(() => {
+    if (!artRef.current || !hlsRef.current || !videoUrl) return;
+    const newUrl = getProxiedUrl(videoUrl);
+    if (hlsRef.current.url !== newUrl) {
+      setIsLoading(true);
+      setError(null);
+      hlsRef.current.loadSource(newUrl);
+    }
+  }, [videoUrl, getProxiedUrl]);
 
   // HLS 错误处理函数
   function handleHlsError(

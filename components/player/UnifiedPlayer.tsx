@@ -363,7 +363,7 @@ export function UnifiedPlayer({
 
       {currentMode === "local" && (
         <LocalHlsPlayer
-          key={`local-${finalVideoUrl}`}
+          key="local"
           videoUrl={finalVideoUrl}
           title={title}
           settings={playerConfig.localPlayerSettings}

@@ -239,3 +239,23 @@ label[for] {
     height: 100vh;
   }
 }
+
+/* ========== 移动端全屏优化 ========== */
+
+/* 全屏状态下隐藏页面导航和侧边栏 */
+html:has(video:-webkit-full-screen) body > *:not([class*="player-container"]),
+html:has(video:fullscreen) body > *:not([class*="player-container"]) {
+  display: none;
+}
+
+/* 修复安卓浏览器全屏后顶部导航栏遮挡 */
+video::-webkit-media-controls {
+  z-index: 2147483647 !important;
+}
+
+/* 防止某些手机浏览器缩放视频区域 */
+video {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
