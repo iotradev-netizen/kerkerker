@@ -278,7 +278,7 @@ export function LocalHlsPlayer({
         const art = new Artplayer({
           container: containerRef.current,
           url: playerUrl,
-          type: hlsSupported ? "m3u8" : undefined,
+          type: "m3u8",
           volume: 0.8,
           isLive: false,
           muted: false,
@@ -313,44 +313,61 @@ export function LocalHlsPlayer({
             m3u8: (video: HTMLVideoElement, url: string) => {
               if (!isMountedRef.current) return;
 
-              const hls = new Hls(hlsConfig);
-              hlsRef.current = hls;
+              if (hlsSupported) {
+                // Chrome/Firefox/Android: 使用 HLS.js
+                const hls = new Hls(hlsConfig);
+                hlsRef.current = hls;
 
-              hls.loadSource(url);
-              hls.attachMedia(video);
+                hls.loadSource(url);
+                hls.attachMedia(video);
 
-              // Manifest 加载完成
-              hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                if (isMountedRef.current && video && document.contains(video)) {
-                  video.play().catch((e) => {
-                    if (e.name === "NotAllowedError") {
-                      console.log("⏸️ 自动播放被阻止，请点击播放按钮开始播放");
-                    } else if (
-                      e.name !== "AbortError" &&
-                      process.env.NODE_ENV === "development"
-                    ) {
-                      console.log("[Autoplay Failed]", e);
-                    }
-                  });
-                }
-              });
+                // Manifest 加载完成
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                  if (
+                    isMountedRef.current &&
+                    video &&
+                    document.contains(video)
+                  ) {
+                    video.play().catch((e) => {
+                      if (e.name === "NotAllowedError") {
+                        console.log(
+                          "⏸️ 自动播放被阻止，请点击播放按钮开始播放"
+                        );
+                      } else if (
+                        e.name !== "AbortError" &&
+                        process.env.NODE_ENV === "development"
+                      ) {
+                        console.log("[Autoplay Failed]", e);
+                      }
+                    });
+                  }
+                });
 
-              // 错误处理
-              hls.on(
-                Hls.Events.ERROR,
-                async (_event: string, data: HlsErrorData) => {
-                  handleHlsError(
-                    data,
-                    hls,
-                    Hls,
-                    useDirectPlay,
-                    setUseDirectPlay,
-                    setPlayMode,
-                    setRetryCount,
-                    setPlayerError
-                  );
-                }
-              );
+                // 错误处理
+                hls.on(
+                  Hls.Events.ERROR,
+                  async (_event: string, data: HlsErrorData) => {
+                    handleHlsError(
+                      data,
+                      hls,
+                      Hls,
+                      useDirectPlay,
+                      setUseDirectPlay,
+                      setPlayMode,
+                      setRetryCount,
+                      setPlayerError
+                    );
+                  }
+                );
+              } else {
+                // iOS Safari: 使用原生 HLS 播放
+                video.src = url;
+                video.play().catch((e) => {
+                  if (e.name !== "AbortError") {
+                    console.log("[Native Play Failed]", e);
+                  }
+                });
+              }
             },
           },
           settings: [
