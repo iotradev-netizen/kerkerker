@@ -146,9 +146,17 @@ export function PlayerSettingsPanel({
         </svg>
       </button>
 
+      {/* 移动端背景遮罩 */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[499] sm:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* 设置面板 */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 md:w-96 bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50 animate-fade-in">
+        <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto top-[60px] sm:top-auto sm:right-0 sm:mt-3 w-full sm:w-80 md:w-96 max-h-[calc(100dvh-80px)] sm:max-h-[70vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-y-auto animate-fade-in z-[500]">
           {/* 标题栏 */}
           <div className="p-3 border-b border-gray-800 bg-gradient-to-r from-gray-800/50 to-transparent">
             <div className="flex items-center justify-between">
