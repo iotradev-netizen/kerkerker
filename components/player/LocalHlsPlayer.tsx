@@ -303,7 +303,7 @@ export function LocalHlsPlayer({
           airplay: true,
           theme: settingsRef.current.theme || "#ef4444",
           lang: navigator.language.toLowerCase(),
-          lock: true,
+          lock: false,
           fastForward: true,
           autoOrientation: true,
           moreVideoAttr: {
