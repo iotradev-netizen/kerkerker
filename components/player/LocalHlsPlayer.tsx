@@ -27,6 +27,8 @@ interface LocalHlsPlayerProps {
   onEnded?: () => void;
   onError?: () => void;
   seekFnRef?: React.MutableRefObject<(delta: number) => void>;
+  onPrevEpisode?: () => void;
+  onNextEpisode?: () => void;
 }
 
 // 常量
@@ -44,6 +46,8 @@ export function LocalHlsPlayer({
   onEnded,
   onError,
   seekFnRef,
+  onPrevEpisode,
+  onNextEpisode,
 }: LocalHlsPlayerProps) {
   // 状态
   const [isLoading, setIsLoading] = useState(true);
@@ -81,6 +85,8 @@ export function LocalHlsPlayer({
   const onProgressRef = useRef(onProgress);
   const onEndedRef = useRef(onEnded);
   const onErrorRef = useRef(onError);
+  const onPrevEpisodeRef = useRef(onPrevEpisode);
+  const onNextEpisodeRef = useRef(onNextEpisode);
   const settingsRef = useRef(settings);
 
   // 更新回调 ref
@@ -88,6 +94,8 @@ export function LocalHlsPlayer({
     onProgressRef.current = onProgress;
     onEndedRef.current = onEnded;
     onErrorRef.current = onError;
+    onPrevEpisodeRef.current = onPrevEpisode;
+    onNextEpisodeRef.current = onNextEpisode;
     settingsRef.current = settings;
   });
 
@@ -420,6 +428,38 @@ export function LocalHlsPlayer({
                   setAutoLoadStatus({ loading: false, message: "" });
                 }, 5000);
               }
+            });
+          }
+
+          // 添加上一集/下一集控制按钮（通过 ref 避免闭包过期）
+          if (onPrevEpisodeRef.current) {
+            art.controls.add({
+              name: "prev-episode",
+              html: `
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                  <line x1="9" y1="6" x2="9" y2="18" stroke-width="3" />
+                </svg>
+              `,
+              position: "left",
+              index: 1,
+              tooltip: "上一集",
+              click: () => onPrevEpisodeRef.current?.(),
+            });
+          }
+          if (onNextEpisodeRef.current) {
+            art.controls.add({
+              name: "next-episode",
+              html: `
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                  <line x1="15" y1="6" x2="15" y2="18" stroke-width="3" />
+                </svg>
+              `,
+              position: "left",
+              index: 2,
+              tooltip: "下一集",
+              click: () => onNextEpisodeRef.current?.(),
             });
           }
         });

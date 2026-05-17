@@ -567,6 +567,8 @@ export default function PlayPage() {
                 onIframePlayerSwitch={(index) => {
                   setCurrentIframePlayerIndex(index);
                 }}
+                onPrevEpisode={previousEpisode}
+                onNextEpisode={nextEpisode}
               />
             )}
           </div>
