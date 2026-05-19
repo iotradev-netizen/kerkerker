@@ -11,7 +11,25 @@ interface Visitor {
   os?: string;
   device?: string;
   browser?: string;
+  ip?: string;
 }
+
+const OS_ICONS: Record<string, string> = {
+  Windows: '🪟',
+  macOS: '🍎',
+  'Mac OS': '🍎',
+  Linux: '🐧',
+  Android: '🤖',
+  iOS: '📱',
+};
+
+const BROWSER_ICONS: Record<string, string> = {
+  Chrome: '🌐',
+  Firefox: '🦊',
+  Safari: '🧭',
+  Edge: '🌍',
+  'MIUI Browser': '📱',
+};
 
 export default async function AdminPage() {
   const db = await getDatabase();
@@ -22,71 +40,131 @@ export default async function AdminPage() {
     .toArray();
 
   const now = Date.now();
+  const online = visitors.filter((v) => now - new Date(v.last_seen).getTime() < 35000);
 
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>实时访客监控</h1>
-      <p style={{ color: '#666', marginBottom: 24 }}>
-        当前在线访客：<strong>{visitors.length}</strong>
-      </p>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">实时访客监控</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Realtime Visitor Dashboard</p>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-emerald-600">{online.length}</div>
+              <div className="text-xs text-gray-500">在线</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-700">{visitors.length}</div>
+              <div className="text-xs text-gray-500">总计</div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-        <thead>
-          <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
-            <th style={{ padding: '10px 12px', borderBottom: '2px solid #ddd' }}>Device ID</th>
-            <th style={{ padding: '10px 12px', borderBottom: '2px solid #ddd' }}>OS</th>
-            <th style={{ padding: '10px 12px', borderBottom: '2px solid #ddd' }}>Device</th>
-            <th style={{ padding: '10px 12px', borderBottom: '2px solid #ddd' }}>Browser</th>
-            <th style={{ padding: '10px 12px', borderBottom: '2px solid #ddd' }}>当前页面</th>
-            <th style={{ padding: '10px 12px', borderBottom: '2px solid #ddd' }}>最后活跃</th>
-          </tr>
-        </thead>
-        <tbody>
-          {visitors.length === 0 ? (
-            <tr>
-              <td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#999' }}>
-                暂无在线访客
-              </td>
-            </tr>
-          ) : (
-            visitors.map((v) => {
-              const lastSeen = new Date(v.last_seen).getTime();
-              const secondsAgo = Math.floor((now - lastSeen) / 1000);
-              const isOnline = secondsAgo <= 35;
+      <main className="max-w-7xl mx-auto px-6 py-6">
+        {visitors.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
+            <div className="text-5xl mb-4">📡</div>
+            <p className="text-gray-500 text-lg">暂无在线访客</p>
+            <p className="text-gray-400 text-sm mt-1">等待用户访问你的网站...</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">
+                      Device ID
+                    </th>
+                    <th className="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">
+                      系统
+                    </th>
+                    <th className="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">
+                      设备
+                    </th>
+                    <th className="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">
+                      浏览器
+                    </th>
+                    <th className="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">
+                      当前页面
+                    </th>
+                    <th className="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">
+                      最后活跃
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {visitors.map((v) => {
+                    const lastSeen = new Date(v.last_seen).getTime();
+                    const secondsAgo = Math.floor((now - lastSeen) / 1000);
+                    const isOnline = secondsAgo <= 35;
 
-              return (
-                <tr key={v.device_id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 12 }}>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        background: isOnline ? '#22c55e' : '#d1d5db',
-                        marginRight: 8,
-                      }}
-                    />
-                    <a
-                      href={`/admin/${v.device_id}`}
-                      style={{ color: '#2563eb', textDecoration: 'none' }}
-                      className="hover-underline"
-                    >
-                      {v.device_id.slice(0, 8)}...
-                    </a>
-                  </td>
-                  <td style={{ padding: '10px 12px' }}>{v.os || '-'}</td>
-                  <td style={{ padding: '10px 12px' }}>{v.device || '-'}</td>
-                  <td style={{ padding: '10px 12px' }}>{v.browser || '-'}</td>
-                  <td style={{ padding: '10px 12px', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.current_page}</td>
-                  <td style={{ padding: '10px 12px', color: '#666' }}>{formatTime(v.last_seen)}</td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-    </main>
+                    return (
+                      <tr
+                        key={v.device_id}
+                        className="hover:bg-blue-50/40 transition-colors"
+                      >
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                isOnline ? 'bg-emerald-500 shadow-sm shadow-emerald-200' : 'bg-gray-300'
+                              }`}
+                            />
+                            <a
+                              href={`/admin/${v.device_id}`}
+                              className="font-mono text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {v.device_id.slice(0, 8)}...
+                            </a>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">
+                            {OS_ICONS[v.os || ''] && `${OS_ICONS[v.os || '']} `}{v.os || '-'}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-gray-700 text-xs">
+                          {v.device === 'mobile' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 text-xs font-medium">
+                              📱 Mobile
+                            </span>
+                          ) : v.device === 'tablet' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 text-xs font-medium">
+                              📟 Tablet
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                              💻 {v.device || '-'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">
+                            {BROWSER_ICONS[v.browser || ''] && `${BROWSER_ICONS[v.browser || '']} `}{v.browser || '-'}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 max-w-56">
+                          <span className="font-mono text-xs text-gray-600 truncate block" title={v.current_page}>
+                            {v.current_page}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-xs text-gray-500 whitespace-nowrap">
+                          {formatTime(v.last_seen)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
 
