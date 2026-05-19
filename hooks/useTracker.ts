@@ -3,6 +3,13 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
+const BOT_RE = /bot|crawl|spider|scrape|headless|slurp|facebook|twitter|discord|telegram|whatsapp/i;
+
+function isBot(): boolean {
+  if (typeof navigator === 'undefined') return true;
+  return BOT_RE.test(navigator.userAgent);
+}
+
 function getDeviceId(): string {
   const key = 'track_device_id';
   let id = localStorage.getItem(key);
@@ -18,6 +25,11 @@ export function useTracker() {
   const deviceIdRef = useRef<string>('');
   const lastPageRef = useRef<string>('');
 
+  useEffect(() => {
+    if (isBot()) return;
+    deviceIdRef.current = getDeviceId();
+  }, []);
+
   const sendHeartbeat = (page: string) => {
     const device_id = deviceIdRef.current;
     if (!device_id) return;
@@ -29,10 +41,6 @@ export function useTracker() {
       keepalive: true,
     }).catch(() => {});
   };
-
-  useEffect(() => {
-    deviceIdRef.current = getDeviceId();
-  }, []);
 
   useEffect(() => {
     const page = pathname;
