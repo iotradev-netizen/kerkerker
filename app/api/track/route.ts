@@ -24,14 +24,25 @@ export async function POST(req: NextRequest) {
     const db = await getDatabase();
     const now = new Date();
 
-    await db.collection(COLLECTIONS.ACTIVE_VISITORS).updateOne(
+    const prev = await db.collection(COLLECTIONS.ACTIVE_VISITORS).findOneAndUpdate(
       { device_id },
       {
         $set: { current_page, last_seen: now, browser, os, device, ip, ua },
         $setOnInsert: { first_seen: now },
       },
-      { upsert: true },
+      { upsert: true, returnDocument: 'before' },
     );
+
+    if (prev && prev.current_page !== current_page) {
+      await db.collection(COLLECTIONS.TRACK_PAGE_LOG).insertOne({
+        device_id,
+        path: current_page,
+        ts: now,
+        browser,
+        os,
+        device,
+      });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

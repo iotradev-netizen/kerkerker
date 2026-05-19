@@ -259,3 +259,7 @@ video {
   -webkit-user-select: none;
   user-select: none;
 }
+
+.hover-underline:hover {
+  text-decoration: underline !important;
+}

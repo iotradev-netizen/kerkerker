@@ -67,7 +67,13 @@ export default async function AdminPage() {
                         marginRight: 8,
                       }}
                     />
-                    {v.device_id.slice(0, 8)}...
+                    <a
+                      href={`/admin/${v.device_id}`}
+                      style={{ color: '#2563eb', textDecoration: 'none' }}
+                      className="hover-underline"
+                    >
+                      {v.device_id.slice(0, 8)}...
+                    </a>
                   </td>
                   <td style={{ padding: '10px 12px' }}>{v.os || '-'}</td>
                   <td style={{ padding: '10px 12px' }}>{v.device || '-'}</td>

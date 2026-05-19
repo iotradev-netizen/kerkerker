@@ -142,6 +142,11 @@ async function initializeDatabase(db: Db) {
     await activeVisitors.createIndex({ device_id: 1 }, { unique: true });
     await activeVisitors.createIndex({ last_seen: 1 }, { expireAfterSeconds: 3600 });
 
+    // track_page_log: 设备页面浏览历史
+    const pageLog = db.collection(COLLECTIONS.TRACK_PAGE_LOG);
+    await pageLog.createIndex({ device_id: 1, ts: -1 });
+    await pageLog.createIndex({ ts: 1 }, { expireAfterSeconds: 86400 * 7 });
+
     globalForMongo.initialized = true;
     console.log('✅ MongoDB 数据库初始化完成');
   } catch (error) {
