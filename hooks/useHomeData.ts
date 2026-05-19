@@ -2,11 +2,13 @@ import useSWR from 'swr';
 import { useMemo } from 'react';
 import type { DoubanMovie } from '@/types/douban';
 import type { CategoryData, HeroData, HeroMovie } from '@/types/home';
-import { getHeroMovies, getNewContent } from '@/lib/douban-service';
+import { getHeroMovies, getNewContent, getMoviesCategories, getTVCategories } from '@/lib/douban-service';
 
 // SWR 缓存键
 const SWR_KEY_HERO = 'home-hero';
-const SWR_KEY_CATEGORIES = 'home-categories';
+const SWR_KEY_LATEST = 'home-latest';
+const SWR_KEY_MOVIES = 'home-movies';
+const SWR_KEY_TV = 'home-tv';
 
 interface UseHomeDataReturn {
   categories: CategoryData[];
@@ -17,12 +19,7 @@ interface UseHomeDataReturn {
   refetch: () => Promise<void>;
 }
 
-/**
- * 管理首页数据加载
- * 使用 SWR 实现缓存，页面返回时不会重复加载
- */
 export function useHomeData(): UseHomeDataReturn {
-  // Hero Banner 数据
   const {
     data: heroData,
     error: heroError,
@@ -30,21 +27,16 @@ export function useHomeData(): UseHomeDataReturn {
     mutate: mutateHero,
   } = useSWR(SWR_KEY_HERO, getHeroMovies);
 
-  // 分类数据
-  const {
-    data: categoryData,
-    error: categoryError,
-    isLoading: categoryLoading,
-    mutate: mutateCategories,
-  } = useSWR(SWR_KEY_CATEGORIES, getNewContent);
+  const { data: latestData } = useSWR(SWR_KEY_LATEST, getNewContent);
+  const { data: moviesData } = useSWR(SWR_KEY_MOVIES, getMoviesCategories);
+  const { data: tvData } = useSWR(SWR_KEY_TV, getTVCategories);
 
-  // 转换 Hero 数据格式
   const { heroMovies, heroDataList } = useMemo(() => {
     if (!heroData || !Array.isArray(heroData)) {
-      return { heroMovies: [], heroDataList: [] };
+      return { heroMovies: [] as DoubanMovie[], heroDataList: [] as HeroData[] };
     }
 
-    const heroMoviesList: HeroMovie[] = heroData.map((hero) => ({
+    const heroMoviesList: DoubanMovie[] = heroData.map((hero) => ({
       id: hero.id,
       title: hero.title,
       cover: hero.cover || '',
@@ -67,35 +59,41 @@ export function useHomeData(): UseHomeDataReturn {
     return { heroMovies: heroMoviesList, heroDataList: heroDataArray };
   }, [heroData]);
 
-  // 转换分类数据格式
   const categories = useMemo(() => {
-    if (!categoryData || !Array.isArray(categoryData)) {
-      return [];
+    const result: Array<{ name: string; data: Array<{ id: string; title: string; rate: string; cover: string; url: string; episode_info: string }> }> = [];
+    const seen = new Set<string>();
+
+    const merged = [
+      ...(latestData || []),
+      ...(moviesData || []),
+      ...(tvData || []),
+    ];
+
+    for (const cat of merged) {
+      if (seen.has(cat.name)) continue;
+      if (!cat.data || cat.data.length === 0) continue;
+      seen.add(cat.name);
+      result.push({
+        name: cat.name,
+        data: cat.data.map((item) => ({
+          id: item.id,
+          title: item.title,
+          rate: item.rate || '',
+          cover: item.cover || '',
+          url: item.url || '',
+          episode_info: item.episode_info || '',
+        })),
+      });
     }
 
-    return categoryData.map((cat) => ({
-      name: cat.name,
-      data: cat.data.map((item) => ({
-        id: item.id,
-        title: item.title,
-        rate: item.rate,
-        cover: item.cover,
-        url: item.url,
-        episode_info: item.episode_info,
-      })),
-    }));
-  }, [categoryData]);
+    return result;
+  }, [latestData, moviesData, tvData]);
 
-  // 刷新所有数据
   const refetch = async () => {
-    await Promise.all([mutateHero(), mutateCategories()]);
+    await Promise.all([mutateHero()]);
   };
 
-  // 合并错误信息
-  const error = heroError?.message || categoryError?.message || null;
-
-  // 仅在 Hero 加载中时显示 loading
-  // 分类数据可以后台加载
+  const error = heroError?.message || null;
   const loading = heroLoading && !heroData;
 
   return {
