@@ -70,7 +70,7 @@ const PAGE_CONFIG: Record<string, PageConfig> = {
     gradient: "from-green-500/5 via-transparent to-blue-500/5",
     bgColor1: "bg-green-500/10",
     bgColor2: "bg-blue-500/10",
-    hasFilters: false,
+    hasFilters: true,
     hasCategories: true,
   },
 };
