@@ -137,10 +137,10 @@ async function initializeDatabase(db: Db) {
     const dailymotionConfigCollection = db.collection(COLLECTIONS.DAILYMOTION_CONFIG);
     await dailymotionConfigCollection.createIndex({ id: 1 }, { unique: true });
 
-    // active_visitors: device_id 唯一索引 + last_seen TTL 索引（1小时自动过期）
+    // active_visitors: 设备注册表，永久保存（在线/离线靠查询时判断）
     const activeVisitors = db.collection(COLLECTIONS.ACTIVE_VISITORS);
     await activeVisitors.createIndex({ device_id: 1 }, { unique: true });
-    await activeVisitors.createIndex({ last_seen: 1 }, { expireAfterSeconds: 3600 });
+    await activeVisitors.createIndex({ last_seen: -1 });
 
     // track_page_log: 设备页面浏览历史
     const pageLog = db.collection(COLLECTIONS.TRACK_PAGE_LOG);
