@@ -16,9 +16,14 @@ export async function POST() {
     const delVisitors = await db.collection(COLLECTIONS.ACTIVE_VISITORS).deleteMany(botFilter);
     const delLogs = await db.collection(COLLECTIONS.TRACK_PAGE_LOG).deleteMany(botFilter);
 
-    // 删除旧的 TTL 索引（如果存在）
+    // 删除 active_visitors 上所有残留的 TTL 索引
     try {
-      await db.collection(COLLECTIONS.ACTIVE_VISITORS).dropIndex('last_seen_1');
+      const indexes = await db.collection(COLLECTIONS.ACTIVE_VISITORS).indexes();
+      for (const idx of indexes) {
+        if (idx.expireAfterSeconds) {
+          if (idx.name) await db.collection(COLLECTIONS.ACTIVE_VISITORS).dropIndex(idx.name);
+        }
+      }
     } catch {
       // 旧索引可能已被删除，忽略错误
     }

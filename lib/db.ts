@@ -142,6 +142,18 @@ async function initializeDatabase(db: Db) {
     await activeVisitors.createIndex({ device_id: 1 }, { unique: true });
     await activeVisitors.createIndex({ last_seen: -1 });
 
+    // 强制清理旧的 TTL 索引（之前版本可能设置了过期时间）
+    try {
+      const existingIndexes = await activeVisitors.indexes();
+      for (const idx of existingIndexes) {
+        if (idx.expireAfterSeconds && idx.name) {
+          await activeVisitors.dropIndex(idx.name);
+        }
+      }
+    } catch {
+      // 清理过程非关键，忽略异常
+    }
+
     // track_page_log: 设备页面浏览历史
     const pageLog = db.collection(COLLECTIONS.TRACK_PAGE_LOG);
     await pageLog.createIndex({ device_id: 1, ts: -1 });
